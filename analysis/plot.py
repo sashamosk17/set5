@@ -87,3 +87,39 @@ plt.grid(True, alpha=0.3)
 plt.tight_layout()
 plt.savefig("results/plots/graph4_error_distribution.png", dpi=150)
 plt.show()
+
+# loglog beta
+plt.figure(figsize=(12, 6))
+plt.plot(df_single["fraction"] * 100, df_single["exact"],
+         'b-o', label=r'$F_t^0$ (точное)', markersize=4, linewidth=2)
+plt.plot(df_single["fraction"] * 100, df_single["hll_estimate"],
+         'r--s', label='HyperLogLog (стандарт)', markersize=4, linewidth=2)
+plt.plot(df_single["fraction"] * 100, df_single["hll_beta_estimate"],
+         'g-.^', label='HyperLogLog (LogLog-Beta)', markersize=4, linewidth=2)
+plt.xlabel("Обработанная часть потока (%)", fontsize=13)
+plt.ylabel("Количество уникальных элементов", fontsize=13)
+plt.title("График 5: Сравнение стандартного HyperLogLog и LogLog-Beta", fontsize=14)
+plt.legend(fontsize=12)
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig("results/plots/graph5_beta_comparison.png", dpi=150)
+plt.show()
+
+
+plt.figure(figsize=(10, 6))
+plt.hist(df_all["relative_error"], bins=15, alpha=0.5, color='red',
+         label='Стандартный', edgecolor='black')
+plt.hist(df_all["beta_relative_error"], bins=15, alpha=0.5, color='green',
+         label='LogLog-Beta', edgecolor='black')
+plt.axvline(df_all["relative_error"].mean(), color='red', linestyle='--',
+            label=f'Среднее (стандарт) = {df_all["relative_error"].mean():.4f}')
+plt.axvline(df_all["beta_relative_error"].mean(), color='green', linestyle='--',
+            label=f'Среднее (beta) = {df_all["beta_relative_error"].mean():.4f}')
+plt.xlabel("Относительная ошибка", fontsize=13)
+plt.ylabel("Частота", fontsize=13)
+plt.title("Сравнение ошибок стандартного HyperLogLog и LogLog-Beta", fontsize=14)
+plt.legend(fontsize=12)
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig("results/plots/graph6_beta_error_comparison.png", dpi=150)
+plt.show()

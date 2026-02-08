@@ -27,9 +27,13 @@ dist/
 *.so
 *.dll
 
-# Results
-results/
-out/
+results/temp_*
+*.tmp
+*.log
+
+!results/*.csv
+!results/plots/
+!results/plots/*.png
 
 # CMake (???????? ???? ?????? C++)
 CMakeCache.txt
@@ -39,4 +43,5 @@ Makefile
 
 # ?????????
 .DS_Store
-Thumbs.db
+Thumbs.db".vs/" 
+"git" 

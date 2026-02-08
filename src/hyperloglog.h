@@ -11,6 +11,7 @@ class HyperLogLog {
   explicit HyperLogLog(int B, std::function<uint32_t(const std::string&)> hashFunc);
   void add(const std::string& item);
   double estimate() const;
+  double estimateBeta() const;  // LogLog-Beta
   void reset();
 
   int getB() const {
@@ -30,4 +31,7 @@ class HyperLogLog {
   // ??????? ????? ??????? ????? + 1 ? ?????????? (32 - B) ?????
   uint8_t rho(uint32_t w) const;
   static double computeAlpha(int m);
+  const std::vector<uint8_t>& getRegisters() const {
+    return registers_;
+  }
 };

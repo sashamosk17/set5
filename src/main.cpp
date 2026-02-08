@@ -17,7 +17,9 @@ struct StepResult {
   size_t streamSize;
   size_t exactCount;
   double hllEstimate;
+  double hllBetaEstimate;  // ?????????
   double relativeError;
+  double betaRelativeError;  // ?????????
 };
 
 struct StreamResults {
@@ -51,16 +53,21 @@ StreamResults runExperiment(size_t uniquePool, size_t totalSize, uint64_t stream
     for (const auto& s : prefix) {
       hll.add(s);
     }
+
     double est = hll.estimate();
+    double betaEst = hll.estimateBeta();
 
     double relErr = (exact > 0) ? std::abs(est - static_cast<double>(exact)) / exact : 0.0;
+    double betaRelErr = (exact > 0) ? std::abs(betaEst - static_cast<double>(exact)) / exact : 0.0;
 
     StepResult step;
     step.fraction = frac;
     step.streamSize = prefix.size();
     step.exactCount = exact;
     step.hllEstimate = est;
+    step.hllBetaEstimate = betaEst;
     step.relativeError = relErr;
+    step.betaRelativeError = betaRelErr;
 
     results.steps.push_back(step);
   }
@@ -70,13 +77,14 @@ StreamResults runExperiment(size_t uniquePool, size_t totalSize, uint64_t stream
 
 void saveResultsCSV(const std::string& filename, const std::vector<StreamResults>& allResults) {
   std::ofstream out(filename);
-  out << "stream_seed,fraction,stream_size,exact,hll_estimate,relative_error\n";
+  out << "stream_seed,fraction,stream_size,exact,hll_estimate,hll_beta_estimate,relative_error,beta_relative_error\n";
 
   for (const auto& sr : allResults) {
     for (const auto& step : sr.steps) {
       out << sr.seed << "," << std::fixed << std::setprecision(4) << step.fraction << "," << step.streamSize << ","
           << step.exactCount << "," << std::fixed << std::setprecision(2) << step.hllEstimate << "," << std::fixed
-          << std::setprecision(6) << step.relativeError << "\n";
+          << std::setprecision(2) << step.hllBetaEstimate << "," << std::fixed << std::setprecision(6)
+          << step.relativeError << "," << std::fixed << std::setprecision(6) << step.betaRelativeError << "\n";
     }
   }
   out.close();
@@ -172,7 +180,7 @@ void investigateB(size_t uniquePool, size_t totalSize, const std::vector<int>& b
 }
 
 int main() {
-  std::cout << "=== HyperLogLog Research ===" << std::endl;
+  std::cout << "HyperLogLog Research" << std::endl;
 
   const int B = 10;
   const uint32_t hashSeed = 42;
@@ -181,10 +189,10 @@ int main() {
   const int numStreams = 10;
   const double fractionStep = 0.1;
 
-  std::cout << "\n--- Investigating B values ---\n";
+  std::cout << "\nInvestigating B values\n";
   investigateB(uniquePool, totalSize, {4, 6, 8, 10}, numStreams, "results/b_investigation.csv");
 
-  std::cout << "\n--- Main experiment (B=" << B << ") ---\n";
+  std::cout << "\nMain experiment (B=" << B << ")\n";
 
   std::vector<StreamResults> allResults;
   for (int i = 0; i < numStreams; ++i) {
@@ -193,9 +201,10 @@ int main() {
     allResults.push_back(res);
 
     std::cout << "Stream " << i << " (seed=" << seed << "): "
-              << "final exact=" << res.steps.back().exactCount << " estimate=" << std::fixed << std::setprecision(1)
-              << res.steps.back().hllEstimate << " rel_err=" << std::setprecision(4) << res.steps.back().relativeError
-              << "\n";
+              << "exact=" << res.steps.back().exactCount << " std=" << std::fixed << std::setprecision(1)
+              << res.steps.back().hllEstimate << " beta=" << res.steps.back().hllBetaEstimate
+              << " std_err=" << std::setprecision(4) << res.steps.back().relativeError
+              << " beta_err=" << res.steps.back().betaRelativeError << "\n";
   }
 
   system("mkdir results 2>nul");

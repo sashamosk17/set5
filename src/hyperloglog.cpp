@@ -48,7 +48,34 @@ void HyperLogLog::add(const std::string& item) {
     registers_[idx] = r;
   }
 }
+double HyperLogLog::estimateBeta() const {
+  int m = m_;
 
+  double sum = 0.0;
+  int zeros = 0;
+
+  for (int j = 0; j < m; ++j) {
+    if (registers_[j] == 0) {
+      zeros++;
+    }
+    sum += std::pow(2.0, -static_cast<double>(registers_[j]));
+  }
+
+  if (zeros == 0) {
+    return estimate();
+  }
+
+  double ez = static_cast<double>(zeros);
+  double zl = std::log(ez + 1);
+
+  // ?????????????? ????????????? beta(z) ?? LogLog-Beta
+  double beta = -0.370393911 * ez + 0.070471823 * zl + 0.17393686 * zl * zl + 0.16339839 * zl * zl * zl -
+                0.09237745 * zl * zl * zl * zl + 0.03738027 * zl * zl * zl * zl * zl -
+                0.005384159 * zl * zl * zl * zl * zl * zl + 0.00042419 * zl * zl * zl * zl * zl * zl * zl;
+
+  double alpha_inf = 0.7213 / (1.0 + 1.079 / m);
+  return alpha_inf * m * (m - zeros) / (sum + beta);
+}
 double HyperLogLog::estimate() const {
   double sum = 0.0;
   for (int j = 0; j < m_; ++j) {
